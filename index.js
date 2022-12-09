@@ -18,13 +18,17 @@ function render(state = store.Home) {
   ${Main(state)}
   ${Footer()}
   `;
+  afterRender();
   router.updatePageLinks();
 }
 
 // add menu toggle to bars icon in nav bar
-// document.querySelector(".fa-bars").addEventListener("click", () => {
-//   document.querySelector("nav > ul").classList.toggle("hidden--mobile");
-// });
+function afterRender() {
+  // add menu toggle to bars icon in nav bar
+  document.querySelector(".fa-bars").addEventListener("click", () => {
+    document.querySelector("nav > ul").classList.toggle("hidden--mobile");
+  });
+}
 
 router.hooks({
   before: (done, params) => {
@@ -38,15 +42,10 @@ router.hooks({
           .get(
             `https://api.openweathermap.org/data/2.5/weather?q=st%20louis&appid=${process.env.OPEN_WEATHER_MAP_API_KEY}`
           )
-
-          // .get(
-          //   `https://api.openweathermap.org/data/2.5/weather?q=st%20louis&appid=8da00a728b7efe71dbe76dbad12f816d
-          //   `
-          // )
-
           .then(response => {
             const kelvinToFahrenheit = kelvinTemp =>
               Math.round((kelvinTemp - 273.15) * (9 / 5) + 32);
+
             store.Home.weather = {};
             store.Home.weather.city = response.data.name;
             store.Home.weather.temp = kelvinToFahrenheit(
@@ -56,10 +55,24 @@ router.hooks({
               response.data.main.feels_like
             );
             store.Home.weather.description = response.data.weather[0].main;
-            console.log("api data", response.data);
             done();
           })
           .catch(err => console.log(err));
+        break;
+      // New Case for Pizza View
+      case "Pizza":
+        // New Axios get request utilizing already made environment variable
+        axios
+          .get(`${process.env.PIZZA_PLACE_API_URL}/pizzas`)
+          .then(response => {
+            // Storing retrieved data in state
+            store.Pizza.pizzas = response.data;
+            done();
+          })
+          .catch(error => {
+            console.log("It puked", error);
+            done();
+          });
         break;
       default:
         done();
